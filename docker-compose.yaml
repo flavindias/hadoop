@@ -13,29 +13,58 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-version: "2"
+networks:
+  hadoop:
+
+volumes:
+  hadoop_namenode:
+  hadoop_datanode:
+
 services:
    namenode:
       build: .
       hostname: namenode
       command: ["hdfs", "namenode"]
-      ports:
-        - 9870:9870
+      labels:
+        - 'traefik.enable=true'
+        - "traefik.http.routers.namenode.rule=Host(`namenode.flavindias.com.br`)"
+        - "traefik.http.routers.namenode.entrypoints=web,websecure"
+        - "traefik.http.services.namenode.loadbalancer.server.port=9870"
+        - "traefik.http.routers.namenode.middlewares=redirect-to-https"
+        - "traefik.http.routers.namenode.service=namenode"
+        - "traefik.http.routers.namenode.tls=true"
+        - "traefik.http.routers.namenode.tls.certresolver=leresolver"
+      expose:
+        - 9870
+      volumes:
+        - hadoop_namenode:/hadoop/dfs/name
       env_file:
         - ./config
       environment:
           ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+
    datanode:
       build: .
       command: ["hdfs", "datanode"]
+      volumes:
+        - hadoop_datanode:/hadoop/dfs/data
       env_file:
         - ./config
    resourcemanager:
       build: .
       hostname: resourcemanager
       command: ["yarn", "resourcemanager"]
-      ports:
-         - 8088:8088
+      labels:
+        - 'traefik.enable=true'
+        - "traefik.http.routers.resourcemanager.rule=Host(`resourcemanager.flavindias.com.br`)"
+        - "traefik.http.routers.resourcemanager.entrypoints=web,websecure"
+        - "traefik.http.services.resourcemanager.loadbalancer.server.port=8088"
+        - "traefik.http.routers.resourcemanager.middlewares=redirect-to-https"
+        - "traefik.http.routers.resourcemanager.service=resourcemanager"
+        - "traefik.http.routers.resourcemanager.tls=true"
+        - "traefik.http.routers.resourcemanager.tls.certresolver=leresolver"
+      expose:
+         - 8088
       env_file:
         - ./config
       volumes:
