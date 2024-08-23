@@ -24,6 +24,9 @@ services:
    namenode:
       build: .
       hostname: namenode
+      restart: always
+      networks:
+        - hadoop
       command: ["hdfs", "namenode"]
       labels:
         - 'traefik.enable=true'
@@ -46,6 +49,9 @@ services:
    datanode:
       build: .
       command: ["hdfs", "datanode"]
+      restart: always
+      networks:
+        - hadoop
       volumes:
         - hadoop_datanode:/hadoop/dfs/data
       env_file:
@@ -53,6 +59,7 @@ services:
    resourcemanager:
       build: .
       hostname: resourcemanager
+      restart: always
       command: ["yarn", "resourcemanager"]
       labels:
         - 'traefik.enable=true'
@@ -65,6 +72,8 @@ services:
         - "traefik.http.routers.resourcemanager.tls.certresolver=leresolver"
       expose:
          - 8088
+      networks:
+        - hadoop
       env_file:
         - ./config
       volumes:
@@ -72,5 +81,8 @@ services:
    nodemanager:
       build: .
       command: ["yarn", "nodemanager"]
+      restart: always
+      networks:
+        - hadoop
       env_file:
         - ./config
